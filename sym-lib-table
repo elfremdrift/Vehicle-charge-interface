@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name Controllino)(type Legacy)(uri ${KIPRJMOD}/Controllino.lib)(options "")(descr ""))
+)
