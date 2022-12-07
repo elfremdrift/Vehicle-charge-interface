@@ -28,20 +28,19 @@ void setup() {
   pinMode(PIN_LED_YELLOW, OUTPUT);        digitalWrite(PIN_LED_YELLOW, LOW);
   pinMode(PIN_LED_GREEN, OUTPUT);         digitalWrite(PIN_LED_GREEN, LOW);
 
+  initTimers();
   initAD();
-  startAD();
 }
 
 extern uint16_t conversions;
 extern uint16_t adConversions[];
 
 void loop() {
-  Serial.print(conversions);
   Serial.write("-Yo?  ");
   // put your main code here, to run repeatedly:
-  delay(100);
+  delay(500);
   digitalWrite(PIN_LED_GREEN, LOW);
-  delay(100);
+  delay(500);
   digitalWrite(PIN_LED_GREEN, HIGH);
 
   char str[64];

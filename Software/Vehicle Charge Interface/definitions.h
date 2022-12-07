@@ -43,6 +43,39 @@
 void initAD();    
 void startAD();
 
+// timer.cpp:
+
+#define TIMER_CNT 5
+
+// Timer type identifiers
+#define TIMER_MS    0
+#define TIMER_CS    1
+#define TIMER_DS    2
+#define TIMER_CNT   3
+
+typedef void (*TimerFunc)();
+
+struct SimpleTimer {
+  inline SimpleTimer(TimerFunc call) : call(call) {};
+  TimerFunc call;
+  struct SimpleTimer* next;
+};
+
+struct ComplexTimer {
+  inline ComplexTimer(TimerFunc call, uint16_t count, bool recurring) : call(call), count(count), recurring(recurring), rest(0) {};
+  TimerFunc call;
+  uint16_t  rest;
+  uint16_t  count;
+  bool      recurring;
+  struct ComplexTimer* next;
+};
+
+void initTimers();
+void addSimpleTimer(byte unit, SimpleTimer& timer);
+void addComplexTimer(byte unit, ComplexTimer& timer);
+void setComplexTimer(ComplexTimer& timer, uint16_t count, bool recurring);
+
+
 // Helper for oring bits:
 constexpr uint16_t orBits(uint16_t n) { return 1<<n; }
 

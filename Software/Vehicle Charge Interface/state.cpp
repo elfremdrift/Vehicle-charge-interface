@@ -1,5 +1,7 @@
 // Charger state machine
 
+#include "definitions.h"
+
 enum class st : byte {
 	  powerOn = 0
 	, idle
@@ -12,23 +14,6 @@ enum class st : byte {
 	, unlocked
 	, nStates
 	, noChange
-}
-
-struct State {
-	// Next state based on read values;
-	state_t	noCpNorPp;		// Next state if neither CP nor PP present
-	state_t	cpOrPp;				// Next state if either CP or PP present
-	state_t	cpAndPp;			// Next state if both CP and PP present
-	state_t	lockLocked;			// Next state if lock indicates locked
-	state_t lockUnlocked;		// Next state if lock indicates unlocked
-	state_t	unlockSwitch;		// Next state if unlock switch is pressed
-	state_t	timeout;			// Next state after lock timeout
-
-	// Output variables in this state:
-	bool	inhibitTraction:1;
-	bool	motorLocking:1;
-	bool	motorUnlocking:1;
-	byte	lights;
 };
 
 enum class lamps : byte {
@@ -43,28 +28,35 @@ enum class lamps : byte {
 	allFlash
 };
 
-state_t state = state_t:powerOn;
+struct State {
+	// Next state based on read values;
+	const st	noCpNorPp;		// Next state if neither CP nor PP present
+	const st  cpOrPp;				// Next state if either CP or PP present
+	const st	cpAndPp;			// Next state if both CP and PP present
+	const st	lockLocked;			// Next state if lock indicates locked
+	const st lockUnlocked;		// Next state if lock indicates unlocked
+	const st	unlockSwitch;		// Next state if unlock switch is pressed
+	const st	timeout;			// Next state after lock timeout
 
-struct State[static_cast<size_t>(state_t::noChange)] states PROGMEM = {
-//		noCpOrPp,		cpOrPp,			cpAndPp,		lockLocked,		lockUnlocked,	unlockSwitch,	timeout
-//			inhibitTract,	motorLock,		motorUnlock,	lamps
-	{	st::noChange,	st::noChange,	st::noChange,	st::noChange,	st::noChange,	st:noChange,	st::idle,		// st::powerOn
-			true,			false			true			lamps::all		},
-	{	st::noChange,	st::cpOrPp,		st::locking,	st::noChange,	st::noChange,	st:noChange,	st::noChange,	// st::idle
-			false,			false,			false,			lamps::none		},
-	{	st::noChange,	st::noChange,	st::locking,	st::noChange,	st::noChange,	st:noChange,	st::noChange,	// st::cpOrPp
-			true,			false,			false,			lamps::yellow	},
-	{	st::noChange,	st::noChange,	st::noChange,	st::noChange,	st::noChange,	st:noChange,	st::locked,		// st::locking
-			true,			true,			false,			lamps::yellowFlash	},
-	{	st::noChange,	st::noChange,	st::noChange,	st::charging,	st::unlock,		st:unlock,		st::noChange,	// st::locked
-			true,			false,			false,			lamps::yellowFlash	},
-	{	st::noPower,	st::noPower,	st::noChange,	st::noChange,	st::noChange,	st:unlock,		st::noChange,	// st::charging
-			true,			false,			false,			lamps::green		},
-	{	st::noChange,	st::noChange,	st::charge,		st::noChange,	st::noChange,	st:unlock,		st::noChange,	// st::noPower
-			true,			false,			false,			lamps::redFlash		},
-	{	st::noChange,	st::noChange,	st::noChange,	st::noChange,	st::noChange,	st:noChange,	st::unlocked,	// st::unlocking
-			true,			false,			true,			lamps::yellowFlash	},
-	{	st::idle,		st::noChange,	st::noChange,	st::noChange,	st::noChange,	st:unlock,		st::noChange,	// st::unlocked
-			true,			false,			false,			lamps::yellow		}
+	// Output variables in this state:
+	const bool	inhibitTraction:1;
+	const bool	motorLocking:1;
+	const bool	motorUnlocking:1;
+	const lamps	lights;
+};
+
+st state = st::powerOn;
+
+const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
+//	noCpOrPp,       cpOrPp,         cpAndPp,        lockLocked,     lockUnlocked,   unlockSwitch,   timeout,      inhibitTract, motorLock,  motorUnlock,	lamps
+	{ st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::idle,     true,         false,      true,         lamps::all          },	// st::powerOn
+	{ st::noChange,   st::cpOrPp,     st::locking,    st::noChange,   st::noChange,   st::noChange,   st::noChange, false,        false,      false,        lamps::none         },  // st::idle
+	{ st::noChange,   st::noChange,   st::locking,    st::noChange,   st::noChange,   st::noChange,   st::noChange, true,         false,      false,        lamps::yellow       },	// st::cpOrPp
+	{	st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::locked,   true,         true,       false,        lamps::yellowFlash  },  // st::locking
+	{	st::noChange,   st::noChange,   st::noChange,   st::charging,   st::unlocking,  st::unlocking,  st::noChange, true,         false,      false,        lamps::yellowFlash	},  // st::locked
+	{	st::noPower,    st::noPower,    st::noChange,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, true,         false,      false,        lamps::green        },  // st::charging
+	{	st::noChange,   st::noChange,   st::charging,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, true,         false,      false,        lamps::redFlash     },  // st::noPower
+	{	st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::unlocked, true,         false,      true,         lamps::yellowFlash  },  // st::unlocking
+	{	st::idle,       st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, true,         false,      false,        lamps::yellow       }   // st::unlocked
 };
 
