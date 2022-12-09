@@ -41,11 +41,11 @@
 
 // ad.cpp:
 void initAD();    
-void startAD();
+void startAD(bool highCP);
 
 // timer.cpp:
 
-#define TIMER_CNT 5
+#define TIMER_CNT	5
 
 // Timer type identifiers
 #define TIMER_MS    0
@@ -75,9 +75,8 @@ void addSimpleTimer(byte unit, SimpleTimer& timer);
 void addComplexTimer(byte unit, ComplexTimer& timer);
 void setComplexTimer(ComplexTimer& timer, uint16_t count, bool recurring);
 
-
 // Helper for oring bits:
-constexpr uint16_t orBits(uint16_t n) { return 1<<n; }
+constexpr uint16_t orBits() { return 0; }
 
 template<typename... T>
 constexpr uint16_t orBits(uint16_t n, T... rest)
