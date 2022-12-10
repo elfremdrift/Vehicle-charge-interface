@@ -9,37 +9,41 @@ static bool highCP = false;
 
 uint16_t conversions = 0;
 
-static SimpleTimer startADTimer(startAD);
-
 void initAD()
 {
   // We set up the AD converter manually to have it run in the background
   ADCSRA = orBits(ADEN, ADIE, ADPS2);
-  ADMUX = ADREF | nextPort;
-  DIDR0 = orBits(PIN_CP_MUX, PIN_PP_MUX, PIN_LOCK_SENSOR_MUX);
-
-  addSimpleTimer(TIMER_CS, startADTimer);
+  ADMUX = ADREF | 1;  // Cannot be 0 (CP pin) due to interrupt
+  DIDR0 = orBits(PIN_PP_MUX, PIN_LOCK_SENSOR_MUX);    // PIN_CP_MUX excluded from having digital input enabled as we need interrupts on edges
 }
 
 void startAD(bool highCPnext)
 {
+  PCMSK1 = orBits(); // Disallow interrupt on CP changes during AD as it seems to trigger interrupt
+
   nextPort = 0;
+  ADMUX = ADREF | nextPort; // First port 0
   highCP = highCPnext;
-  ADMUX = ADREF | nextPort;
   ADCSRA |= _BV(ADSC); // Start conversion
   ++conversions;
+  ++nextPort;
+  ADMUX = ADREF | nextPort; // Set ADMUX in advance for next convertion to let it settle better
 }
 
 ISR(ADC_vect)
 {
   // Latest AD conversion done.
   ADCSRA &= ~_BV(ADIF); // Reset interrupt flag
-  adConversions[nextPort+(highCP?0:1)] = ADCW+1;
+  adConversions[nextPort-1+(highCP?0:1)] = ADCW;
 
-  ++nextPort;
-  highCP = false;
-  if (nextPort != N_AD_MUX_PINS) {
-    ADMUX = ADREF | nextPort;
+  if (!highCP && nextPort != N_AD_MUX_PINS) {
     ADCSRA |= _BV(ADSC); // Start conversion
+    ++nextPort;
+    ADMUX = ADREF | nextPort;
   }
+  else {
+    nextPort = 0;
+    PCMSK1 = orBits(PCINT8); // Allow interrupt on CP changes again
+  }
+  highCP = false;
 }

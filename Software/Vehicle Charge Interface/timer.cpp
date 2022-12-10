@@ -18,11 +18,7 @@
   TCCR##N##C = orBits(); \
   TIMSK##N = I; \
   TIFR##N = orBits(); \
-  ICR##N = TIMER_TOP;
-
-#define TIMER_TOP_16  (F_CPU/8/1000)  // Top value for 16-bit timers for 1kHz loop with factor 8 prescaling
-#define TIMER_TOP_8   (F_CPU/64/1000) // Top value for 8-bit timers for 1kHz loop with factor 64 prescaling
-#define TIMER_TOP TIMER_TOP_16        // Value used for PWM calculation always relates to 16-bit timer to get good correct resolution
+  ICR##N = TIMER_TOP_16*10/9;  // In this application, we freecycle a bit slower than 1KHz (900Hz) and manually reset timer when CP goes high
 
 #define TIMER_BITS_0  8
 #define TIMER_BITS_1  16
@@ -36,8 +32,8 @@
 
 #define TIMER_REG_WRAP(reg,timer) reg##timer
 #define TIMER_REG(reg,timer) TIMER_REG_WRAP(reg,timer)
-#define TIMER_REGAB_WRAP(reg,timer,ab) reg##timer##ab
-#define TIMER_REGAB(reg,timer,ab) TIMER_REG_WRAP(reg,timer,ab)
+#define TIMER_REG_AB_WRAP(reg,timer,ab) reg##timer##ab
+#define TIMER_REG_AB(reg,timer,ab) TIMER_REG_AB_WRAP(reg,timer,ab)
 
 #define INITTIMER_WRAP3(X,B,I) INITTIMER_##B##_WRAP(X,I)
 #define INITTIMER_WRAP2(X,B,I) INITTIMER_WRAP3(X,B,I)
@@ -70,11 +66,14 @@ static byte ds10 = 0;
 static SimpleTimer* simpleTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
 static ComplexTimer* complexTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
 
+uint16_t pwmValue = 0;
+
 void initTimers()
 {
   memset(lastOutput, 0xff, sizeof(lastOutput));
   
   cli();  // Stop interrupts
+
 
 #ifdef PSRSYNC
   GTCCR = orBits(TSM, PSRSYNC); // Stop timers for sync 
@@ -84,13 +83,22 @@ void initTimers()
 
   // Set up timers to use fast PWM, top register
   INITTIMER(TIMER_A, orBits(TIMER_REG_AB(OCIE, TIMER_A, A), TIMER_REG_AB(OCIE, TIMER_A, B)));
-  REG2(TCNT,TIMER_A) = 0;  // Init timer A value to 0
+  WR_HL(TCNT1, 0);  // Init timer 1 value to 0
   REG3(OCR,TIMER_A,A) = TIMER_05PCT_16;	// Give interrupt at 5% into PWM cycle to measure high CP
-  REG3(OCR,TIMER_A,B) = TIMER_05PCT_16;	// Give interrupt at 90% into PWM cycle to measure low CP
+  REG3(OCR,TIMER_A,B) = TIMER_90PCT_16;	// Give interrupt at 90% into PWM cycle to measure low CP
 
   GTCCR = 0;  // Release timers
 
   sei();  // Re-enable interrupts
+
+  // Let timer run freely for a short period of time as OCR flags in this mode are set at timer TOP value
+  delay(100);
+
+  // Then allow CP to interrupt us:
+  PCMSK0 = 0;
+  PCMSK1 = orBits(PCINT8); // Allow interrupt on CP changes
+  PCMSK2 = 0;
+  PCICR = orBits(PCIE1);
 }
 
 void addSimpleTimer(byte unit, SimpleTimer& timer)
@@ -163,15 +171,44 @@ void MsTimer()
   msCount++;
 }
 
-#define ISR_ROUTINE_WRAP(N,I,F,AB,M) \
-ISR(TIMER##N##_##I##AB##_vect) \
-{ \
-  TIFR##N = TIFR##N & ~F##N##AB; \
-  M \
+ISR(TIMER1_COMPA_vect)    // 5% into duty-cycle
+{
+  startAD(true);          // Measure high CP value
 }
-#define ISR_ROUTINE(N,I,F,AB,M) ISR_ROUTINE_WRAP(N,I,F,AB,M)
 
-ISR_ROUTINE(TIMER_A, OVF, TOV, , MsTimer(););
-ISR_ROUTINE(TIMER_A, COMP, OCF, A, startAD(true););
-ISR_ROUTINE(TIMER_A, COMP, OCF, B, startAD(false););
+ISR(TIMER1_COMPB_vect)    // 90% into dutycycle
+{
+  startAD(false);         // Measure low CP value
+}
+
+static void timerSync()
+{
+#ifdef PSRSYNC
+  GTCCR = orBits(TSM, PSRSYNC); // Stop timers for sync
+#else
+  GTCCR = orBits(TSM);
+#endif
+
+  WR_HL(TCNT1, 0);  // Set timer value to 0
+
+  GTCCR = 0;  // Release timers
+}
+
+static void readPWM()
+{
+  RD_LH(TCNT1, pwmValue);
+}
+
+// CP sensing interrupt
+ISR(PCINT1_vect)
+{
+  if (PINC & _BV(PC0)) {
+    // Leading edge of CP pulse: Syncronize timer with CP signal
+    timerSync();
+  }
+  else {
+    // Falling edge of CP pulse: Register PWM value. Clock is set to 1MHz so PWM in % is value / 10
+    readPWM();
+  }
+}
 
