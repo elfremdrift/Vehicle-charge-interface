@@ -14,7 +14,7 @@ void initAD()
   // We set up the AD converter manually to have it run in the background
   ADCSRA = orBits(ADEN, ADIE, ADPS2);
   ADMUX = ADREF | 1;  // Cannot be 0 (CP pin) due to interrupt
-  DIDR0 = orBits(PIN_PP_MUX, PIN_LOCK_SENSOR_MUX);    // PIN_CP_MUX excluded from having digital input enabled as we need interrupts on edges
+  DIDR0 = orBits(PIN_PP_MUX, PIN_LOCK_SENSOR_MUX);    // PIN_CP_MUX excluded from having digital input disabled as we need interrupts on edges
 }
 
 void startAD(bool highCPnext)
@@ -28,7 +28,8 @@ void startAD(bool highCPnext)
   ++conversions;
   ++nextPort;
   ADMUX = ADREF | nextPort; // Set ADMUX in advance for next convertion to let it settle better
-}
+  PCMSK1 = orBits(PCINT8); // Allow interrupt on CP changes again as MUX is not set to CP pin any more
+ }
 
 ISR(ADC_vect)
 {
@@ -43,7 +44,6 @@ ISR(ADC_vect)
   }
   else {
     nextPort = 0;
-    PCMSK1 = orBits(PCINT8); // Allow interrupt on CP changes again
   }
   highCP = false;
 }
