@@ -3,6 +3,7 @@
  * Code is written to run on Atmel ATMEGA 328P hardware such as the Controllino Mini.
 **/
 
+#define EXTERN
 #include "definitions.h"
 
 void setup() {

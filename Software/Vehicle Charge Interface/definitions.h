@@ -6,6 +6,10 @@
 
 #include <Controllino.h>
 
+#ifndef EXTERN
+#define EXTERN extern
+#endif
+
 // Analog input pins:
 #define PIN_CP                CONTROLLINO_A0
 #define PIN_CP_MUX            0
@@ -46,32 +50,78 @@
 
 // Input variable types:
 enum class CP : byte {
-    invalid = 0   // unconnected or illegal values
-  , connected     // Steady 9V
+    connected = 0     // Steady 9V
   , pwm9          // 9V PWM (power off) 
   , pwm6          // 6V PWM (power on)
+  , invalid       // unconnected or illegal value
 };
 
 enum class PP : byte {
-    invalid = 0   // unconnected or illegal value
-  , max13A        // 1.5 kohm resistor indicating 1.5mm2 cable for 13A max
+    max13A = 0    // 1.5 kohm resistor indicating 1.5mm2 cable for 13A max
   , max20A        // 680 ohm resistor indicating 2.5mm2 cable for 20A max
   , max32A        // 250 ohm resistor indicating 6mm2 cable for 32A max
+  , invalid       // unconnected or illegal value
 };
 
 enum class S1 : byte {
-    invalid = 0   // Switch state unknown
-  , unlocked      // Lock state is unlocked (or locked with no plug)
+    unlocked = 0  // Lock state is unlocked (or locked with no plug)
   , locked        // Lock state is locked
+  , invalid       // Switch state unknown
 };
+
+enum class SW : byte {
+    pressed = 0   // Button is pressed (filter will act as debouncer)
+  , invalid  
+}
 
 // processed input variables:
 
 extern byte pwmPercentage;    // Measured duty cycle in %
 extern byte pwmCurrent;       // Max current calculated from duty cycle
-extern CP   cpState;          // State of the CP signal
-extern PP   ppState;          // State of the PP signal
-extern S1   s1State;          // State of the S1 signal
+
+// input filter:
+template<typename Enum, byte depth = 10, byte invalid = static_cast<byte>(Enum::invalid)>
+class Filter
+{
+public:
+  Filter()
+  {
+    memset(weights, 0, sizeof(weights));
+    weights[invalid] = depth;
+  }
+  void set(Enum value)
+  {
+    bool set=false;
+    for (byte w=0; w<=invalid; ++w) {
+      if (w==static_cast<byte>(value) || (w == invalid && !set)) {
+        if (weights[w]<depth) ++weights[w];
+        if (weights[w] == depth) {
+          current=static_cast<Enum>(w);
+          set = true;
+          if (w != invalid) weights[invalid] = 0;
+        }
+      }
+      else {
+        if (weights[w]>2)
+          weights[w] -= 2;
+        else
+          weights[w] = 0;
+      }
+    }
+  }
+  Enum get() const
+  {
+    return current;
+  }
+private:
+  byte weights[invalid+1];
+  Enum current = Enum::invalid;
+};
+
+EXTERN Filter<CP> cpState;          // State of the CP signal
+EXTERN Filter<PP> ppState;          // State of the PP signal
+EXTERN Filter<S1> s1State;          // State of the S1 signal
+EXTERN Filter<SW> swState;          // State of the switch
 
 // prototypes
 
