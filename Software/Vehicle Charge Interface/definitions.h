@@ -50,10 +50,9 @@
 
 // Input variable types:
 enum class CP : byte {
-    connected = 0     // Steady 9V
-  , pwm9          // 9V PWM (power off) 
+    pwm9 = 0      // 9V PWM (power off) 
   , pwm6          // 6V PWM (power on)
-  , invalid       // unconnected or illegal value
+  , invalid       // unconnected, no or or illegal value
 };
 
 enum class PP : byte {
@@ -131,7 +130,7 @@ void startAD(bool highCP);
 
 // timer.cpp:
 
-#define TIMER_CNT	5
+#define TIMER_CNT     5
 #define TIMER_TOP_16  (F_CPU/8/1000)      // Top value for 16-bit timers for 1kHz loop with factor 8 prescaling
 #define TIMER_TOP_8   (F_CPU/64/1000)     // Top value for 8-bit timers for 1kHz loop with factor 64 prescaling
 #define TIMER_TOP TIMER_TOP_16            // Value used for PWM calculation always relates to 16-bit timer to get good correct resolution
