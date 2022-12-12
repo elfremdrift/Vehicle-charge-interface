@@ -74,9 +74,9 @@ ISR(ADC_vect)
       // Got a complete set of measurements - set states
 
       // CP:
-      byte val = adConversions[ADC_LOWCP];
+      uint16_t val = adConversions[ADC_LOWCP];
       if (val <= CPN12VMAX) {
-        byte highCP = adConversions[ADC_HIGHCP];
+        uint16_t highCP = adConversions[ADC_HIGHCP];
         if (highCP >= CP9VMIN && highCP <= CP9VMAX)
           cp.set(CP::pwm9);
         else if (highCP >= CP6VMIN && highCP <= CP6VMAX)
