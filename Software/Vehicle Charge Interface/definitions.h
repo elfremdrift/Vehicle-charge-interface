@@ -71,12 +71,12 @@ enum class S1 : byte {
 enum class SW : byte {
     pressed = 0   // Button is pressed (filter will act as debouncer)
   , invalid  
-}
+};
 
 // processed input variables:
 
-extern byte pwmPercentage;    // Measured duty cycle in %
-extern byte pwmCurrent;       // Max current calculated from duty cycle
+EXTERN int16_t  pwmValue;         // Measured duty cycle in thousands
+EXTERN byte     pwmCurrent;       // Max current calculated from duty cycle
 
 // input filter:
 template<typename Enum, byte depth = 10, byte invalid = static_cast<byte>(Enum::invalid)>
@@ -128,6 +128,11 @@ EXTERN Filter<SW> swState;          // State of the switch
 void initAD();    
 void startAD(bool highCP);
 
+// state.cpp:
+void initState();
+void updateState();
+
+
 // timer.cpp:
 
 #define TIMER_CNT     5
@@ -163,8 +168,6 @@ void initTimers();
 void addSimpleTimer(byte unit, SimpleTimer& timer);
 void addComplexTimer(byte unit, ComplexTimer& timer);
 void setComplexTimer(ComplexTimer& timer, uint16_t count, bool recurring);
-
-extern uint16_t pwmValue;
 
 // Helper for oring bits:
 constexpr uint16_t orBits() { return 0; }

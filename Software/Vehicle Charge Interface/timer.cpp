@@ -66,7 +66,6 @@ static byte ds10 = 0;
 static SimpleTimer* simpleTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
 static ComplexTimer* complexTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
 
-uint16_t pwmValue = 0;
 
 void initTimers()
 {

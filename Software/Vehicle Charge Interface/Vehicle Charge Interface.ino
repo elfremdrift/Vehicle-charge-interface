@@ -42,7 +42,7 @@ void loop() {
 	updateState();
 
   char str[128];
-  sprintf_P(str, F("%u conversions: PWM high: %u, PWM low: %u, PP: %u, S1: %u, PWM%%: %u, switch: %d\n"),
+  sprintf(str, "%u conversions: PWM high: %u, PWM low: %u, PP: %u, S1: %u, PWM%%: %u, switch: %d\n",
             conversions, adConversions[0], adConversions[1], adConversions[2], adConversions[3], (uint16_t)(pwmValue / PWM_DIVISOR),
             digitalRead(PIN_UNLOCK_SWITCH));
   Serial.write(str);

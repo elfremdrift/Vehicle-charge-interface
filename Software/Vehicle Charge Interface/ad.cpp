@@ -60,7 +60,7 @@ ISR(ADC_vect)
 {
   // Latest AD conversion done.
   ADCSRA &= ~_BV(ADIF); // Reset interrupt flag
-  adConversions[(nextPort!=0)?nextport+1:(highCP?0:1)] = ADCW;
+  adConversions[(nextPort!=0)?nextPort+1:(highCP?0:1)] = ADCW;
 
   ++nextPort;
   if (!highCP && nextPort != N_AD_MUX_PINS) {
@@ -78,39 +78,39 @@ ISR(ADC_vect)
       if (val <= CPN12VMAX) {
         uint16_t highCP = adConversions[ADC_HIGHCP];
         if (highCP >= CP9VMIN && highCP <= CP9VMAX)
-          cp.set(CP::pwm9);
+          cpState.set(CP::pwm9);
         else if (highCP >= CP6VMIN && highCP <= CP6VMAX)
-          cp.set(CP::pwm6);
+          cpState.set(CP::pwm6);
         else
-          cp.set(CP::invalid);
+          cpState.set(CP::invalid);
       } else
-        cp.set(CP::invalid);
+        cpState.set(CP::invalid);
 
       // PP:
       val = adConversions[ADC_PP];
       if (val >= PP13AMIN && val <= PP13AMAX)
-        pp.set(PP::max13A);
+        ppState.set(PP::max13A);
       else if (val >= PP20AMIN && val <= PP20AMAX)
-        pp.set(PP::max20A);
+        ppState.set(PP::max20A);
       else if (val >= PP32AMIN && val <= PP32AMAX)
-        pp.set(PP::max32A);
+        ppState.set(PP::max32A);
       else
-        pp.set(PP::invalid);
+        ppState.set(PP::invalid);
 
       // S1:
       val = adConversions[ADC_S1];
       if (val >= S1LCKMIN && val <= S1LCKMAX)
-        pp.set(S1::locked);
+        s1State.set(S1::locked);
       else if (val >= S1UNLMIN && val <= S1UNLMAX)
-        pp.set(S1::unlocked);
+        s1State.set(S1::unlocked);
       else
-        pp.set(S1::invalid);
+        s1State.set(S1::invalid);
 
       // Switch:
       if (PINC & _BV(PINC4))    // Same as digitalRead(PIN_UNLOCK_SWITCH) but faster
-        sw.set(SW::pressed);
+        swState.set(SW::pressed);
       else
-        sw.set(SW::invalid);
+        swState.set(SW::invalid);
     }
   }
 }
