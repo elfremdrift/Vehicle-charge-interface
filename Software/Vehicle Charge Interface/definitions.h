@@ -178,6 +178,7 @@ extern Filter<S1> s1State;          // State of the S1 signal
 extern Filter<SW> swState;          // State of the switch
 #endif
 // prototypes
+void writePGM(PGM_P p);
 
 // ad.cpp:
 void initAD();

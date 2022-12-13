@@ -57,26 +57,27 @@ struct State {
 	const bool	inhibitTraction:1;
 	const bool	motorLocking:1;
 	const bool	motorUnlocking:1;
+  const bool  chargingOn:1;
 	const lamps	lights;
 };
 
 #define MOTOR_DS	6
 
-const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
-//	noCpOrPp,       cpOrPp,         cpAndPp,        lockLocked,     lockUnlocked,   unlockSwitch,   timeout,      timeoutDS,		inhibitTract, motorLock,  motorUnlock,	lamps
-	{ st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::idle,     MOTOR_DS,			true,         false,      true,         lamps::all          },	// st::powerOn
-	{ st::noChange,   st::cpOrPp,     st::locking,    st::noChange,   st::noChange,   st::noChange,   st::noChange, 0,						false,        false,      false,        lamps::none         },  // st::idle
-	{ st::noChange,   st::noChange,   st::locking,    st::noChange,   st::noChange,   st::noChange,   st::noChange, 0,						true,         false,      false,        lamps::yellow       },	// st::cpOrPp
-	{	st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::locked,   MOTOR_DS,			true,         true,       false,        lamps::yellowFlash  },  // st::locking
-	{	st::noChange,   st::noChange,   st::noChange,   st::charging,   st::unlocking,  st::unlocking,  st::noChange, 0,						true,         false,      false,        lamps::yellowFlash	},  // st::locked
-	{	st::noPower,    st::noPower,    st::noChange,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, 0,						true,         false,      false,        lamps::green        },  // st::charging
-	{	st::noChange,   st::noChange,   st::charging,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, 0,						true,         false,      false,        lamps::redFlash     },  // st::noPower
-	{	st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::unlocked, MOTOR_DS,			true,         false,      true,         lamps::yellowFlash  },  // st::unlocking
-	{	st::idle,       st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, 0,						true,         false,      false,        lamps::yellow       }   // st::unlocked
+const struct State states[static_cast<size_t>(st::noChange)]  = {
+//	noCpOrPp,       cpOrPp,         cpAndPp,        lockLocked,     lockUnlocked,   unlockSwitch,   timeout,      timeoutDS,		inhibitTract, motorLock,  motorUnlock,	chargingOn, lamps
+	{ st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::idle,     MOTOR_DS,			true,         false,      true,         false,      lamps::all          },	// st::powerOn
+	{ st::noChange,   st::cpOrPp,     st::locking,    st::noChange,   st::noChange,   st::noChange,   st::noChange, 0,						false,        false,      false,        false,      lamps::none         },  // st::idle
+	{ st::noChange,   st::noChange,   st::locking,    st::noChange,   st::noChange,   st::noChange,   st::noChange, 0,						true,         false,      false,        false,      lamps::yellow       },	// st::cpOrPp
+	{	st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::locked,   MOTOR_DS,			true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
+	{	st::noChange,   st::noChange,   st::noChange,   st::charging,   st::unlocking,  st::unlocking,  st::noChange, 0,						true,         false,      false,        false,      lamps::yellowFlash	},  // st::locked
+	{	st::noPower,    st::noPower,    st::noChange,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, 0,						true,         false,      false,        true,       lamps::green        },  // st::charging
+	{	st::noChange,   st::noChange,   st::charging,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, 0,						true,         false,      false,        false,      lamps::redFlash     },  // st::noPower
+	{	st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::unlocked, MOTOR_DS,			true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
+	{	st::idle,       st::noChange,   st::noChange,   st::noChange,   st::noChange,   st::unlocking,  st::noChange, 0,						true,         false,      false,        false,      lamps::yellow       }   // st::unlocked
 };
 
 static st state;
-static byte stateTimer;
+ byte stateTimer;
 
 static void updateOutput();
 
@@ -94,6 +95,11 @@ void initState()
 	stateTimer = 0;
 	updateOutput();
 	addSimpleTimer(TIMER_DS, updateTimer);
+  Serial.print("****** ");
+  byte idx = static_cast<byte>(state);
+  Serial.print(idx);
+  
+  Serial.println(static_cast<int>(states[idx].timeout));
 }
 
 void updateState()
@@ -104,7 +110,7 @@ void updateState()
 	byte stateNow = static_cast<size_t>(state);
 	if (states[stateNow].noCpOrPp != st::noChange && !hasCp && !hasPp)
 		state = states[stateNow].noCpOrPp;
-	else if (states[stateNow].cpOrPp != st::noChange && (hasCp || hasPp))
+	else if (states[stateNow].cpOrPp != st::noChange && (hasCp ^ hasPp))
 		state = states[stateNow].cpOrPp;
 	else if (states[stateNow].cpAndPp != st::noChange && hasCp && hasPp)
 		state = states[stateNow].cpAndPp;
@@ -126,8 +132,11 @@ void updateState()
 
 static void updateOutput()
 {
-	byte stateNow = static_cast<size_t>(state);
+  byte stateNow = static_cast<size_t>(state);
+
 	digitalWrite(PIN_TRACTION_DISABLE, states[stateNow].inhibitTraction);
+
+  digitalWrite(PIN_CP_PULLDOWN, states[stateNow].chargingOn);
 
 	digitalWrite(PIN_LOCK_OPEN, false);
 	digitalWrite(PIN_LOCK_CLOSE, false);
@@ -166,6 +175,7 @@ static void updateOutput()
 		digitalWrite(PIN_LED_GREEN, true);
 		break;
 	}
+  
 }
 
 PGM_P getState()

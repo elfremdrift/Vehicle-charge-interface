@@ -26,9 +26,9 @@
 
 uint16_t  adConversions[N_AD_MUX_PINS + 1] = { 0, 0, 0, 0 };
 #define ADC_HIGHCP  0
-#define ADC_LOWCP   0
-#define ADC_PP      0
-#define ADC_S1      0
+#define ADC_LOWCP   1
+#define ADC_PP      2
+#define ADC_S1      3
 
 static byte nextPort = 0;
 static bool highCP = false;
@@ -65,7 +65,6 @@ ISR(ADC_vect)
   ++nextPort;
   if (!highCP && nextPort != N_AD_MUX_PINS) {
     ADCSRA |= _BV(ADSC); // Start conversion
-    ++nextPort;
     ADMUX = ADREF | (nextPort+1);
   }
   else {
@@ -107,7 +106,7 @@ ISR(ADC_vect)
         s1State.set(S1::invalid);
 
       // Switch:
-      if (PINC & _BV(PINC4))    // Same as digitalRead(PIN_UNLOCK_SWITCH) but faster
+      if (PINC & _BV(PINC3))    // Same as digitalRead(PIN_UNLOCK_SWITCH) but faster
         swState.set(SW::pressed);
       else
         swState.set(SW::invalid);

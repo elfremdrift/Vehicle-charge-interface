@@ -101,7 +101,8 @@ void initTimers()
 
   // Piggyback on timer0:
   OCR0B = 10;   // Call our interrupt when timer reaches arbitrary value of 10
-  TIFR0 |= _BV(OCF0B);  // Enable interrupt on OCR0B value match (every 125/128 ms ~ 1ms)
+  TIFR0 = 0;  // Enable interrupt on OCR0B value match (every 125/128 ms ~ 1ms)
+  TIMSK0 |= _BV(OCIE0B);
 }
 
 void addSimpleTimer(byte unit, SimpleTimer& timer)
@@ -174,7 +175,7 @@ void MsTimer()
   msCount++;
 }
 
-ISR(TIMER0_COMPA_vect)    // 5% into duty-cycle
+ISR(TIMER0_COMPB_vect)    // 5% into duty-cycle
 {
   MsTimer();    // We piggyback on the standard arduino Timer0 to get an appx. 1ms interrupt for our timers
 }
