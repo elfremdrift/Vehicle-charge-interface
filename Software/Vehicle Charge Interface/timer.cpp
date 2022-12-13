@@ -70,14 +70,14 @@ static ComplexTimer* complexTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
 void initTimers()
 {
   memset(lastOutput, 0xff, sizeof(lastOutput));
-  
+
   cli();  // Stop interrupts
 
 
 #ifdef PSRSYNC
-  GTCCR = orBits(TSM, PSRSYNC); // Stop timers for sync 
+  GTCCR = orBits(TSM, PSRSYNC); // Stop timers for sync
 #else
-  GTCCR = orBits(TSM); // Stop timers for sync 
+  GTCCR = orBits(TSM); // Stop timers for sync
 #endif
 
   // Set up timers to use fast PWM, top register

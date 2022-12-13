@@ -12,8 +12,22 @@ enum class st : byte {
 	, noPower
 	, unlocking
 	, unlocked
-	, nStates
 	, noChange
+	, nStates
+};
+
+const char stNames[][11] PROGMEM = {
+	  "powerOn   "
+	, "idle      "
+	, "cpOrPp    "
+	, "locking   "
+	, "locked    "
+	, "charging  "
+	, "noPower   "
+	, "unlocking "
+	, "unlocked  "
+	, "noChange  "
+	, "nStates   "
 };
 
 enum class lamps : byte {
@@ -152,4 +166,9 @@ static void updateOutput()
 		digitalWrite(PIN_LED_GREEN, true);
 		break;
 	}
+}
+
+PGM_P getState()
+{
+  return stNames[static_cast<size_t>(state)];
 }

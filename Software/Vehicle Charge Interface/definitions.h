@@ -6,8 +6,10 @@
 
 #include <Controllino.h>
 
-#ifndef EXTERN
+#ifndef MAIN
 #define EXTERN extern
+#else
+#define EXTERN
 #endif
 
 // Analog input pins:
@@ -48,12 +50,24 @@
 #define WR_HL_WRAP(REGH, REGL, VAL) { REGH = ((VAL)>>8)&0xff; REGL = (VAL)&0xff; }
 #define WR_HL(REG, VAL) WR_HL_WRAP(REG##H, REG##L, VAL) // Write 16 bit register safely
 
+#define MAXINPUTSTR 5
+
 // Input variable types:
 enum class CP : byte {
-    pwm9 = 0      // 9V PWM (power off) 
+    pwm9 = 0      // 9V PWM (power off)
   , pwm6          // 6V PWM (power on)
   , invalid       // unconnected, no or or illegal value
 };
+
+EXTERN const char cpNames[][MAXINPUTSTR] PROGMEM
+#ifdef MAIN
+= {
+  "off ",
+  "on  ",
+  "dis "
+}
+#endif
+;
 
 enum class PP : byte {
     max13A = 0    // 1.5 kohm resistor indicating 1.5mm2 cable for 13A max
@@ -62,16 +76,46 @@ enum class PP : byte {
   , invalid       // unconnected or illegal value
 };
 
+EXTERN const char ppNames[][MAXINPUTSTR] PROGMEM
+#ifdef MAIN
+= {
+  "13A ",
+  "20A ",
+  "32A ",
+  "dis "
+}
+#endif
+;
+
 enum class S1 : byte {
     unlocked = 0  // Lock state is unlocked (or locked with no plug)
   , locked        // Lock state is locked
   , invalid       // Switch state unknown
 };
 
+EXTERN const char s1Names[][MAXINPUTSTR] PROGMEM
+#ifdef MAIN
+= {
+  "unl ",
+  "lck ",
+  "inv "
+}
+#endif
+;
+
 enum class SW : byte {
     pressed = 0   // Button is pressed (filter will act as debouncer)
-  , invalid  
+  , invalid
 };
+
+EXTERN const char swNames[][MAXINPUTSTR] PROGMEM
+#ifdef MAIN
+= {
+  "* ",
+  "- "
+}
+#endif
+;
 
 // processed input variables:
 
@@ -83,7 +127,7 @@ template<typename Enum, byte depth = 10, byte invalid = static_cast<byte>(Enum::
 class Filter
 {
 public:
-  Filter()
+  Filter(PGM_P const names) : names(names)
   {
     memset(weights, 0, sizeof(weights));
     weights[invalid] = depth;
@@ -112,26 +156,37 @@ public:
   {
     return current;
   }
+  PGM_P getValue()
+  {
+    return names + static_cast<size_t>(current)*MAXINPUTSTR;
+  }
 private:
   byte weights[invalid+1];
   Enum current = Enum::invalid;
+  PGM_P names;
 };
 
-EXTERN Filter<CP> cpState;          // State of the CP signal
-EXTERN Filter<PP> ppState;          // State of the PP signal
-EXTERN Filter<S1> s1State;          // State of the S1 signal
-EXTERN Filter<SW> swState;          // State of the switch
-
+#ifdef MAIN
+Filter<CP> cpState(cpNames[0]);          // State of the CP signal
+Filter<PP> ppState(ppNames[0]);          // State of the PP signal
+Filter<S1> s1State(s1Names[0]);          // State of the S1 signal
+Filter<SW> swState(swNames[0]);          // State of the switch
+#else
+extern Filter<CP> cpState;          // State of the CP signal
+extern Filter<PP> ppState;          // State of the PP signal
+extern Filter<S1> s1State;          // State of the S1 signal
+extern Filter<SW> swState;          // State of the switch
+#endif
 // prototypes
 
 // ad.cpp:
-void initAD();    
+void initAD();
 void startAD(bool highCP);
 
 // state.cpp:
 void initState();
 void updateState();
-
+PGM_P getState();
 
 // timer.cpp:
 
@@ -176,5 +231,5 @@ template<typename... T>
 constexpr uint16_t orBits(uint16_t n, T... rest)
 {
   return (1<<n) | orBits(rest...);
-} 
+}
 
