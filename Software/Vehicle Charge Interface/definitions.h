@@ -166,6 +166,13 @@ private:
   PGM_P names;
 };
 
+// Typed PROGMEM byte access:
+template<typename T>
+T rdPgm(const T& val) {
+  return static_cast<T>(pgm_read_byte(&val));
+}
+
+
 #ifdef MAIN
 Filter<CP> cpState(cpNames[0]);          // State of the CP signal
 Filter<PP> ppState(ppNames[0]);          // State of the PP signal

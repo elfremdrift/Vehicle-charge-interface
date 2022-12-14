@@ -45,8 +45,8 @@
 #define REG3_WRAP(R, N, C) R##N##C
 #define REG3(R,N,C) REG3_WRAP(R,N,C)
 
-#define	TIMER_05PCT_16  (5*TIMER_TOP_16/100)    // Value at 5% of ramp for measuring high CP
-#define	TIMER_90PCT_16  (90*TIMER_TOP_16/100)   // Value at 90 % of ramp for measuruning low CP
+#define  TIMER_05PCT_16  (5*TIMER_TOP_16/100)    // Value at 5% of ramp for measuring high CP
+#define  TIMER_90PCT_16  (90*TIMER_TOP_16/100)   // Value at 90 % of ramp for measuruning low CP
 
 static int lastOutput[N_PORTS];
 
@@ -83,8 +83,8 @@ void initTimers()
   // Set up timers to use fast PWM, top register
   INITTIMER(TIMER_A, orBits(TIMER_REG_AB(OCIE, TIMER_A, A), TIMER_REG_AB(OCIE, TIMER_A, B)));
   WR_HL(TCNT1, 0);  // Init timer 1 value to 0
-  REG3(OCR,TIMER_A,A) = TIMER_05PCT_16;	// Give interrupt at 5% into PWM cycle to measure high CP
-  REG3(OCR,TIMER_A,B) = TIMER_90PCT_16;	// Give interrupt at 90% into PWM cycle to measure low CP
+  REG3(OCR,TIMER_A,A) = TIMER_05PCT_16;  // Give interrupt at 5% into PWM cycle to measure high CP
+  REG3(OCR,TIMER_A,B) = TIMER_90PCT_16;  // Give interrupt at 90% into PWM cycle to measure low CP
 
   GTCCR = 0;  // Release timers
 

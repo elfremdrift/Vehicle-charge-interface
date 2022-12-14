@@ -38,7 +38,7 @@ void setup() {
 
   initTimers();
   initAD();
-	initState();
+  initState();
 
   writePGM(PSTR("done.\n"));
   writePGM(PSTR("State     CP  PP  S1  SW  AMP Inh Lck Ulck Ind\n"));
@@ -50,8 +50,7 @@ extern uint16_t ints1, ints2;
 extern byte stateTimer;
 
 void loop() {
-	updateState();
-
+  updateState();
 
   delay(100);
   writePGM(getState());
