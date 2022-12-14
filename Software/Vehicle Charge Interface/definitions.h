@@ -174,10 +174,10 @@ T rdPgm(const T& val) {
 
 
 #ifdef MAIN
-Filter<CP> cpState(cpNames[0]);          // State of the CP signal
-Filter<PP> ppState(ppNames[0]);          // State of the PP signal
-Filter<S1> s1State(s1Names[0]);          // State of the S1 signal
-Filter<SW> swState(swNames[0]);          // State of the switch
+Filter<CP> cpState(cpNames[0]);     // State of the CP signal
+Filter<PP> ppState(ppNames[0]);     // State of the PP signal
+Filter<S1> s1State(s1Names[0]);     // State of the S1 signal
+Filter<SW> swState(swNames[0]);     // State of the switch
 #else
 extern Filter<CP> cpState;          // State of the CP signal
 extern Filter<PP> ppState;          // State of the PP signal

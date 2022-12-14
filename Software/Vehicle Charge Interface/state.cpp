@@ -64,16 +64,16 @@ struct State {
 #define MOTOR_DS  6
 
 const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
-//  noCpOrPp,       cpOrPp,       cpAndPp,      lockLocked,   lockUnlocked,   unlockSwitch,   timeout,      timeoutDS,  inhibitTract, motorLock,  motorUnlock,  chargingOn, lamps
-  { st::noChange,   st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,     MOTOR_DS,   true,         false,      true,         false,      lamps::all          },  // st::powerOn
-  { st::noChange,   st::cpOrPp,   st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          false,        false,      false,        false,      lamps::none         },  // st::idle
-  { st::noChange,   st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
-  {  st::noChange,  st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::locked,   MOTOR_DS,   true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
-  {  st::noChange,  st::noChange, st::noChange, st::charging, st::unlocking,  st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::yellowFlash  },  // st::locked
-  {  st::noPower,   st::noPower,  st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        true,       lamps::green        },  // st::charging
-  {  st::noChange,  st::noChange, st::charging, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::redFlash     },  // st::noPower
-  {  st::noChange,  st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlocked, MOTOR_DS,   true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
-  {  st::idle,      st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       }   // st::unlocked
+//  noCpOrPp,     cpOrPp,       cpAndPp,      lockLocked,   lockUnlocked,   unlockSwitch,   timeout,      timeoutDS,  inhibitTract, motorLock,  motorUnlock,  chargingOn, lamps
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,     MOTOR_DS,   true,         false,      true,         false,      lamps::all          },  // st::powerOn
+  { st::noChange, st::cpOrPp,   st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          false,        false,      false,        false,      lamps::none         },  // st::idle
+  { st::noChange, st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::locked,   MOTOR_DS,   true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
+  { st::noChange, st::noChange, st::noChange, st::charging, st::unlocking,  st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::yellowFlash  },  // st::locked
+  { st::noPower,  st::noPower,  st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        true,       lamps::green        },  // st::charging
+  { st::noChange, st::noChange, st::charging, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::redFlash     },  // st::noPower
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlocked, MOTOR_DS,   true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
+  { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       }   // st::unlocked
 };
 
 static st state;
@@ -87,7 +87,28 @@ static void updateTime()
     ++stateTimer;
 }
 
+static void flash()
+{
+  switch (rdPgm(states[static_cast<byte>(state)].lights)) {
+  case lamps::redFlash:
+    digitalWrite(PIN_LED_RED, !digitalRead(PIN_LED_RED));
+    break;
+  case lamps::greenFlash:
+    digitalWrite(PIN_LED_GREEN, !digitalRead(PIN_LED_GREEN));
+    break;
+  case lamps::yellowFlash:
+    digitalWrite(PIN_LED_YELLOW, !digitalRead(PIN_LED_YELLOW));
+    break;
+  case lamps::allFlash:
+    digitalWrite(PIN_LED_RED, !digitalRead(PIN_LED_RED));
+    digitalWrite(PIN_LED_GREEN, !digitalRead(PIN_LED_GREEN));
+    digitalWrite(PIN_LED_YELLOW, !digitalRead(PIN_LED_YELLOW));
+    break;
+  }
+}
+
 static SimpleTimer updateTimer(updateTime);
+static ComplexTimer flashTimer(flash, 3, true);
 
 void initState()
 {
@@ -95,6 +116,7 @@ void initState()
   stateTimer = 0;
   updateOutput();
   addSimpleTimer(TIMER_DS, updateTimer);
+  addComplexTimer(TIMER_DS, flashTimer);
 }
 
 void updateState()
