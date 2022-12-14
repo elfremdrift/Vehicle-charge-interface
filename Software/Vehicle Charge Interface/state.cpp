@@ -44,12 +44,12 @@ enum class lamps : byte {
 
 struct State {
   // Next state based on read values;
-  const st    noCpOrPp;      // Next state if neither CP nor PP present
-  const st    cpOrPp;        // Next state if either CP or PP present
+  const st    noCpOrPp;     // Next state if neither CP nor PP present
+  const st    cpOrPp;       // Next state if either CP or PP present
   const st    cpAndPp;      // Next state if both CP and PP present
-  const st    lockLocked;    // Next state if lock indicates locked
-  const st    lockUnlocked;  // Next state if lock indicates unlocked
-  const st    unlockSwitch;  // Next state if unlock switch is pressed
+  const st    lockLocked;   // Next state if lock indicates locked
+  const st    lockUnlocked; // Next state if lock indicates unlocked
+  const st    unlockSwitch; // Next state if unlock switch is pressed
   const st    timeout;      // Next state after lock timeout
   const byte  timeoutDS;    // Number of deciseconds to timeout
 
@@ -58,14 +58,14 @@ struct State {
   const byte  motorLocking;
   const byte  motorUnlocking;
   const byte  chargingOn;
-  const lamps  lights;
+  const lamps lights;
 };
 
 #define MOTOR_DS  6
 
 const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
 //  noCpOrPp,     cpOrPp,       cpAndPp,      lockLocked,   lockUnlocked,   unlockSwitch,   timeout,      timeoutDS,  inhibitTract, motorLock,  motorUnlock,  chargingOn, lamps
-  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,     MOTOR_DS,   true,         false,      true,         false,      lamps::all          },  // st::powerOn
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,     MOTOR_DS,   false,        false,      true,         false,      lamps::all          },  // st::powerOn
   { st::noChange, st::cpOrPp,   st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          false,        false,      false,        false,      lamps::none         },  // st::idle
   { st::noChange, st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
   { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::locked,   MOTOR_DS,   true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
@@ -156,11 +156,18 @@ static void updateOutput()
 
   digitalWrite(PIN_CP_PULLDOWN, rdPgm(stateNow.chargingOn));
 
-  digitalWrite(PIN_LOCK_OPEN, false);
-  digitalWrite(PIN_LOCK_CLOSE, false);
-  delay(100); // Make sure to have break-before-make to avoid shorting PSU
-  digitalWrite(PIN_LOCK_OPEN, rdPgm(stateNow.motorUnlocking));
-  digitalWrite(PIN_LOCK_CLOSE, rdPgm(stateNow.motorLocking));
+  byte newState = (rdPgm(stateNow.motorLocking) ? 1 : 0) + (rdPgm(stateNow.motorUnlocking) ? 2 : 0);
+  byte oldState = (digitalRead(PIN_LOCK_CLOSE) ? 1 : 0) + (digitalRead(PIN_LOCK_OPEN) ? 2 : 0);
+
+  if (oldState != newState) {
+    digitalWrite(PIN_LOCK_OPEN, false);
+    digitalWrite(PIN_LOCK_CLOSE, false);
+    if (newState != 0) {
+      if (oldState != 0) delay(100); // Ensure break-before-make
+      digitalWrite(PIN_LOCK_CLOSE, newState & 1);
+      digitalWrite(PIN_LOCK_OPEN, newState & 2);
+    }
+  }
 
   switch (rdPgm(stateNow.lights)) {
   case lamps::none:

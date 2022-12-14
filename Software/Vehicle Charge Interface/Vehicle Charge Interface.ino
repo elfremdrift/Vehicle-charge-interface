@@ -46,7 +46,6 @@ void setup() {
 
 extern uint16_t conversions;
 extern uint16_t adConversions[];
-extern uint16_t ints1, ints2;
 extern byte stateTimer;
 
 void loop() {

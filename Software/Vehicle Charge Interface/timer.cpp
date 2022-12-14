@@ -64,7 +64,7 @@ static byte cs10 = 0;
 static byte ds10 = 0;
 
 static SimpleTimer* simpleTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
-static ComplexTimer* complexTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
+ ComplexTimer* complexTimers[TIMER_CNT] = {nullptr, nullptr, nullptr};
 
 
 void initTimers()
@@ -134,6 +134,7 @@ inline void runTimerCalls(byte timerUnit)
   }
 
   ComplexTimer* c = complexTimers[timerUnit];
+
   while (c) {
     if (c->count != 0 && c->rest != 0) {
       c->rest--;
@@ -144,10 +145,12 @@ inline void runTimerCalls(byte timerUnit)
         }
       }
     }
-    c++;
+    c = c->next;
   }
 }
+
 extern uint16_t conversions;
+
 void MsTimer()
 {
   runTimerCalls(TIMER_MS);

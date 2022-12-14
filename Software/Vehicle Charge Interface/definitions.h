@@ -219,7 +219,7 @@ struct SimpleTimer {
 };
 
 struct ComplexTimer {
-  inline ComplexTimer(TimerFunc call, uint16_t count, bool recurring) : call(call), count(count), recurring(recurring), rest(0) {};
+  inline ComplexTimer(TimerFunc call, uint16_t cnt, bool recurring) : call(call), count(cnt), recurring(recurring), rest(cnt) {};
   TimerFunc call;
   uint16_t  rest;
   uint16_t  count;
