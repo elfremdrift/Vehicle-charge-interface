@@ -12,8 +12,9 @@ enum class st : byte {
   , noPower
   , unlocking
   , unlocked
-  , noChange
-  , nStates
+  , unlckerr
+  , unlckderr
+  , noChange  // Must be last
 };
 
 const char stNames[][11] PROGMEM = {
@@ -26,8 +27,9 @@ const char stNames[][11] PROGMEM = {
   , "noPower   "
   , "unlocking "
   , "unlocked  "
+  , "unlckerr  "
+  , "unlckderr "
   , "noChange  "
-  , "nStates   "
 };
 
 enum class lamps : byte {
@@ -64,16 +66,18 @@ struct State {
 #define MOTOR_DS  6
 
 const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
-//  noCpOrPp,     cpOrPp,       cpAndPp,      lockLocked,   lockUnlocked,   unlockSwitch,   timeout,      timeoutDS,  inhibitTract, motorLock,  motorUnlock,  chargingOn, lamps
-  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,     MOTOR_DS,   false,        false,      true,         false,      lamps::all          },  // st::powerOn
-  { st::noChange, st::cpOrPp,   st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          false,        false,      false,        false,      lamps::none         },  // st::idle
-  { st::noChange, st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
-  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::locked,   MOTOR_DS,   true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
-  { st::noChange, st::noChange, st::noChange, st::charging, st::unlocking,  st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::yellowFlash  },  // st::locked
-  { st::noPower,  st::noPower,  st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        true,       lamps::green        },  // st::charging
-  { st::noChange, st::noChange, st::charging, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::redFlash     },  // st::noPower
-  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlocked, MOTOR_DS,   true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
-  { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange, 0,          true,         false,      false,        false,      lamps::yellow       }   // st::unlocked
+//  noCpOrPp,     cpOrPp,       cpAndPp,      lockLocked,   lockUnlocked,   unlockSwitch,   timeout,        timeoutDS,  inhibitTract, motorLock,  motorUnlock,  chargingOn, lamps
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,       MOTOR_DS,   false,        false,      true,         false,      lamps::all          },  // st::powerOn
+  { st::noChange, st::cpOrPp,   st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange,   0,          false,        false,      false,        false,      lamps::none         },  // st::idle
+  { st::noChange, st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange,   0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::locked,     MOTOR_DS,   true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
+  { st::noChange, st::noChange, st::noChange, st::charging, st::unlckerr,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::yellowFlash  },  // st::locked
+  { st::noPower,  st::noPower,  st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        true,       lamps::green        },  // st::charging
+  { st::noChange, st::noChange, st::charging, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::redFlash     },  // st::noPower
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlocked,   MOTOR_DS,   true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
+  { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::yellow       },  // st::unlocked
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlckderr,  MOTOR_DS,   true,         false,      true,         false,      lamps::redFlash     },  // st::unlocking
+  { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::redFlash     }   // st::unlocked
 };
 
 static st state;
@@ -126,7 +130,9 @@ void updateState()
   bool hasPp = ppState.get() != PP::invalid;
   const State& stateNow = states[static_cast<size_t>(state)];
   st nextSt;
-  if ((nextSt=rdPgm(stateNow.noCpOrPp)) != st::noChange && !hasCp && !hasPp)
+  if ((nextSt=rdPgm(stateNow.unlockSwitch)) != st::noChange && swState.get() == SW::pressed)
+    state = nextSt;
+  else if ((nextSt=rdPgm(stateNow.noCpOrPp)) != st::noChange && !hasCp && !hasPp)
     state = nextSt;
   else if ((nextSt=rdPgm(stateNow.cpOrPp)) != st::noChange && (hasCp ^ hasPp))
     state = nextSt;
@@ -135,8 +141,6 @@ void updateState()
   else if ((nextSt=rdPgm(stateNow.lockLocked)) != st::noChange && s1State.get() == S1::locked)
     state = nextSt;
   else if ((nextSt=rdPgm(stateNow.lockUnlocked)) != st::noChange && s1State.get() == S1::unlocked)
-    state = nextSt;
-  else if ((nextSt=rdPgm(stateNow.unlockSwitch)) != st::noChange && swState.get() == SW::pressed)
     state = nextSt;
   else if ((nextSt=rdPgm(stateNow.timeout)) != st::noChange && stateTimer >= rdPgm(stateNow.timeoutDS))
     state = nextSt;
