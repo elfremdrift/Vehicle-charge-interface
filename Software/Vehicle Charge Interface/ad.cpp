@@ -3,12 +3,12 @@
 #include "definitions.h"
 
 #define CP12VMAX  830   // 13V (probably 792)
-#define CP12VMIN  728   // 11V
-#define CP9VMAX   697   // 10V
-#define CP9VMIN   633   // 8V
-#define CP6VMAX   602   // 7V
-#define CP6VMIN   538   // 5V
-#define CPN12VMAX 32    // -11V
+#define CP12VMIN  713   // 10.5V
+#define CP9VMAX   712   // 10.5V
+#define CP9VMIN   618   // 7.5V
+#define CP6VMAX   617   // 7.5V
+#define CP6VMIN   523   // 4.5V
+#define CPN12VMAX 48    // -10.5V
 #define CPN12VMIN 0     // -12V
 
 #define PPNCMIN   733
@@ -20,15 +20,11 @@
 #define PP32AMIN  439
 
 #define S1LCKMAX  734    // 10k
-#define S1LCKMIN  668
+#define S1LCKMIN  628
 #define S1UNLMAX  526    // 1k
 #define S1UNLMIN  460
 
 uint16_t  adConversions[N_AD_MUX_PINS + 1] = { 0, 0, 0, 0 };
-#define ADC_HIGHCP  0
-#define ADC_LOWCP   1
-#define ADC_PP      2
-#define ADC_S1      3
 
 static byte nextPort = 0;
 static bool highCP = false;

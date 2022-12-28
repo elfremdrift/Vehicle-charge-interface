@@ -3,21 +3,23 @@
 #include "definitions.h"
 
 enum class st : byte {
-    powerOn = 0
-  , idle
-  , cpOrPp
-  , locking
-  , locked
-  , charging
-  , noPower
-  , unlocking
-  , unlocked
-  , unlckerr
-  , unlckderr
+    powerOn = 0       // [ALL] Initial state when powered on - do initial unlock
+  , idle              // [OFF] Idle state - waiting for plug
+  , cpOrPp            // [YELLOW] Either CP or PP found - waiting for both
+  , locking           // [YELLOW] Start locking
+  , locked            // [YELLOW] Motor ran for MOTOR_DS deciseconds - check if locked correctly
+  , charging          // [GREEN] Locked correctly - power turned on
+  , noPower           // [RED] Power was lost after charging started
+  , unlocking         // [YELLOW] Start unlocking
+  , unlockwt          // [YELLOW] Motor ran MOTOR_DS - stop motor, wait here until switch released
+  , unlocked          // [YELLOW] Switch released, waiting for CP and PP to go away, then back to idle
+  , unlckerr          // [RED] Locking failed - unlock again
+  , unlckwterr        // [RED] Lock should be unlocked - wait here if switch is pressed
+  , unlckderr         // [RED] Switch released, wait for CP and PP to go away, then back to idle
   , noChange  // Must be last
 };
 
-const char stNames[][11] PROGMEM = {
+const char stNames[][static_cast<byte>(st::noChange)] PROGMEM = {
     "powerOn   "
   , "idle      "
   , "cpOrPp    "
@@ -26,9 +28,11 @@ const char stNames[][11] PROGMEM = {
   , "charging  "
   , "noPower   "
   , "unlocking "
+  , "unlockwt "
   , "unlocked  "
-  , "unlckerr  "
-  , "unlckderr "
+  , "unlkerr   "
+  , "unlkwterr "
+  , "unlkderr  "
   , "noChange  "
 };
 
@@ -74,10 +78,12 @@ const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
   { st::noChange, st::noChange, st::noChange, st::charging, st::unlckerr,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::yellowFlash  },  // st::locked
   { st::noPower,  st::noPower,  st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        true,       lamps::green        },  // st::charging
   { st::noChange, st::noChange, st::charging, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::redFlash     },  // st::noPower
-  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlocked,   MOTOR_DS,   true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlockwt,   MOTOR_DS,   true,         false,      true,         false,      lamps::yellowFlash  },  // st::unlocking
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::unlockwt,   st::unlocked,   2,          true,         false,      false,        false,      lamps::yellow       },  // st::unlockwt
   { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::yellow       },  // st::unlocked
-  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlckderr,  MOTOR_DS,   true,         false,      true,         false,      lamps::redFlash     },  // st::unlocking
-  { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::redFlash     }   // st::unlocked
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::unlckwterr, MOTOR_DS,   true,         false,      true,         false,      lamps::redFlash     },  // st::unlocking
+  { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::unlckwterr, st::unlckderr,  2,          true,         false,      false,        false,      lamps::redFlash     },  // st::unlocking
+  { st::idle,     st::noChange, st::noChange, st::noChange, st::noChange,   st::unlckerr,   st::noChange,   0,          true,         false,      false,        false,      lamps::redFlash     }   // st::unlocked
 };
 
 static st state;
@@ -128,8 +134,9 @@ void updateState()
   auto cpIn = cpState.get();
   bool hasCp = cpIn == CP::pwm9 || cpIn == CP::pwm6;
   bool hasPp = ppState.get() != PP::invalid;
-  const State& stateNow = states[static_cast<size_t>(state)];
+  const State& stateNow = states[static_cast<byte>(state)];
   st nextSt;
+
   if ((nextSt=rdPgm(stateNow.unlockSwitch)) != st::noChange && swState.get() == SW::pressed)
     state = nextSt;
   else if ((nextSt=rdPgm(stateNow.noCpOrPp)) != st::noChange && !hasCp && !hasPp)
@@ -146,6 +153,17 @@ void updateState()
     state = nextSt;
   else
     return;
+
+  writePGM(getState());
+  writePGM(cpState.getValue());
+  writePGM(ppState.getValue());
+  writePGM(s1State.getValue());
+  writePGM(swState.getValue());
+  //Serial.println(stateTimer);
+  //Serial.print("State -> "); Serial.print(static_cast<int>(state));
+  //Serial.print(" PP: "); Serial.print(adConversions[0]);
+  //Serial.print(" pp: "); Serial.println(adConversions[1]);
+  Serial.flush();
 
   // State was changed - update output variables:
   stateTimer = 0;

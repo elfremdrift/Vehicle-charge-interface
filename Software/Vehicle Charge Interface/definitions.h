@@ -24,6 +24,11 @@
 
 #define N_AD_MUX_PINS         3
 
+#define ADC_HIGHCP  0
+#define ADC_LOWCP   1
+#define ADC_PP      2
+#define ADC_S1      3
+
 // Digital input pins:
 #define PIN_UNLOCK_SWITCH     CONTROLLINO_A3
 
@@ -121,6 +126,9 @@ EXTERN const char swNames[][MAXINPUTSTR] PROGMEM
 
 EXTERN int16_t  pwmValue;         // Measured duty cycle in thousands
 EXTERN byte     pwmCurrent;       // Max current calculated from duty cycle
+extern uint16_t conversions;
+extern uint16_t adConversions[];
+extern byte stateTimer;
 
 // input filter:
 template<typename Enum, byte depth = 10, byte invalid = static_cast<byte>(Enum::invalid)>

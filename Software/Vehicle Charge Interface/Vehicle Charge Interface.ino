@@ -6,8 +6,6 @@
 #define MAIN
 #include "definitions.h"
 
-
-
 void writePGM(PGM_P p)
 {
   char c;
@@ -44,21 +42,10 @@ void setup() {
   writePGM(PSTR("State     CP  PP  S1  SW  AMP Inh Lck Ulck Ind\n"));
 }
 
-extern uint16_t conversions;
-extern uint16_t adConversions[];
-extern byte stateTimer;
 
 void loop() {
   updateState();
-
   delay(100);
-  writePGM(getState());
-  writePGM(cpState.getValue());
-  writePGM(ppState.getValue());
-  writePGM(s1State.getValue());
-  writePGM(swState.getValue());
-  Serial.println(stateTimer);
-  Serial.flush();
 
 /*
   char str[128];
@@ -66,9 +53,6 @@ void loop() {
             conversions, adConversions[0], adConversions[1], adConversions[2], adConversions[3], (uint16_t)(pwmValue / PWM_DIVISOR),
             digitalRead(PIN_UNLOCK_SWITCH));
   Serial.write(str);
-
-  
 */
-
 
 }
