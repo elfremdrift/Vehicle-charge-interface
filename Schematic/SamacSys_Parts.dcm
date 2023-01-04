@@ -1,0 +1,19 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NE555DR
+D Single Precision Timer
+F http://www.ti.com/lit/ds/symlink/ne555.pdf
+$ENDCMP
+#
+$CMP OMRON_P2R-05P
+D 1 Pole - SPDT G2R series relay socket
+K Single Pole Relay socket SPDT
+F https://gfinder.findernet.com/public/attachments/34/EN/S34USAEN.pdf
+$ENDCMP
+#
+$CMP P2R-05P
+D Relay Sockets & Fixings PCB SOCKET G2R-1S
+F http://www.mouser.com/ds/2/307/G2RS_S_0911-42218.pdf
+$ENDCMP
+#
+#End Doc Library

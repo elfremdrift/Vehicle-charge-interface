@@ -1,0 +1,89 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# NE555DR
+#
+DEF NE555DR IC 0 30 Y Y 1 F N
+F0 "IC" 1050 600 50 H V L CNN
+F1 "NE555DR" 1050 500 50 H V L CNN
+F2 "SOIC127P600X175-8N" 1050 400 50 H I L CNN
+F3 "http://www.ti.com/lit/ds/symlink/ne555.pdf" 1050 300 50 H I L CNN
+F4 "Single Precision Timer" 1050 200 50 H I L CNN "Description"
+F5 "1.75" 1050 100 50 H I L CNN "Height"
+F6 "Texas Instruments" 1050 0 50 H I L CNN "Manufacturer_Name"
+F7 "NE555DR" 1050 -100 50 H I L CNN "Manufacturer_Part_Number"
+F8 "595-NE555DR" 1050 -200 50 H I L CNN "Mouser Part Number"
+F9 "https://www.mouser.com/Search/Refine.aspx?Keyword=595-NE555DR" 1050 -300 50 H I L CNN "Mouser Price/Stock"
+F10 "1218414" 1050 -400 50 H I L CNN "RS Part Number"
+F11 "http//uk.rs-online.com/web/p/products/1218414" 1050 -500 50 H I L CNN "RS Price/Stock"
+DRAW
+P 5 0 1 6 200 400 1000 400 1000 -800 200 -800 200 400 N
+X GND 1 600 -1000 200 U 50 50 0 0 B
+X TRIG 2 0 -400 200 R 50 50 0 0 B
+X OUT 3 1200 -200 200 L 50 50 0 0 B
+X ~RESET 4 0 0 200 R 50 50 0 0 B
+X CONT 5 500 600 200 D 50 50 0 0 B
+X THRES 6 0 -300 200 R 50 50 0 0 B
+X DISCH 7 0 -100 200 R 50 50 0 0 B
+X VCC 8 700 600 200 D 50 50 0 0 B
+ENDDRAW
+ENDDEF
+#
+# OMRON_P2R-05P
+#
+DEF OMRON_P2R-05P K 0 20 Y Y 1 F N
+F0 "K" 450 150 50 H V L CNN
+F1 "OMRON_P2R-05P" 450 50 50 H V L CNN
+F2 "Downloaded_parts:P2R-05P" 1140 -40 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ Relay*SPDT*Finder*34.51*
+$ENDFPLIST
+DRAW
+S -400 200 400 -200 0 1 10 f
+S -325 75 -75 -75 0 1 10 N
+P 4 0 0 0 300 200 300 100 275 125 300 150 N
+P 2 0 1 10 -300 -75 -100 75 N
+P 2 0 1 0 -200 -200 -200 -75 N
+P 2 0 1 0 -200 200 -200 75 N
+P 2 0 1 10 -75 0 -50 0 N
+P 2 0 1 10 -25 0 0 0 N
+P 2 0 1 10 25 0 50 0 N
+P 2 0 1 10 75 0 100 0 N
+P 2 0 1 10 125 0 150 0 N
+P 2 0 1 20 200 -100 125 150 N
+P 2 0 1 0 200 -100 200 -200 N
+P 4 0 1 0 100 200 100 100 125 125 100 150 F
+X ~ 1 -200 -300 100 U 50 50 1 1 P
+X ~ 2 100 300 100 D 50 50 1 1 P
+X ~ 3 300 300 100 D 50 50 1 1 P
+X ~ 4 200 -300 100 U 50 50 1 1 P
+X ~ 5 -200 300 100 D 50 50 1 1 P
+ENDDRAW
+ENDDEF
+#
+# P2R-05P
+#
+DEF P2R-05P J 0 30 Y Y 1 F N
+F0 "J" 650 300 50 H V L CNN
+F1 "P2R-05P" 650 200 50 H V L CNN
+F2 "P2R-05P" 650 100 50 H I L CNN
+F3 "http://www.mouser.com/ds/2/307/G2RS_S_0911-42218.pdf" 650 0 50 H I L CNN
+F4 "Relay Sockets & Fixings PCB SOCKET G2R-1S" 650 -100 50 H I L CNN "Description"
+F5 "Omron Electronics" 650 -300 50 H I L CNN "Manufacturer_Name"
+F6 "P2R-05P" 650 -400 50 H I L CNN "Manufacturer_Part_Number"
+F7 "653-P2R-05P" 650 -500 50 H I L CNN "Mouser Part Number"
+F8 "https://www.mouser.co.uk/ProductDetail/Omron-Automation-and-Safety/P2R-05P?qs=FGnoE8EzQwsCxwzVdN5wMw%3D%3D" 650 -600 50 H I L CNN "Mouser Price/Stock"
+F9 "P2R-05P" 650 -700 50 H I L CNN "Arrow Part Number"
+F10 "https://www.arrow.com/en/products/p2r-05p/omron?region=nac" 650 -800 50 H I L CNN "Arrow Price/Stock"
+DRAW
+P 5 0 1 6 200 100 600 100 600 -300 200 -300 200 100 N
+X 1 1 0 0 200 R 50 50 0 0 P
+X 2 2 0 -100 200 R 50 50 0 0 P
+X 3 3 0 -200 200 R 50 50 0 0 P
+X 4 4 800 0 200 L 50 50 0 0 P
+X 5 5 800 -100 200 L 50 50 0 0 P
+ENDDRAW
+ENDDEF
+#
+#End Library

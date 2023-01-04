@@ -1,3 +1,4 @@
 (sym_lib_table
   (lib (name Controllino)(type Legacy)(uri ${KIPRJMOD}/Controllino.lib)(options "")(descr ""))
+  (lib (name Downloaded_parts)(type Legacy)(uri ${KIPRJMOD}/SamacSys_Parts.lib)(options "")(descr ""))
 )
