@@ -73,7 +73,7 @@ const struct State states[static_cast<size_t>(st::noChange)] PROGMEM = {
 //  noCpOrPp,     cpOrPp,       cpAndPp,      lockLocked,   lockUnlocked,   unlockSwitch,   timeout,        timeoutDS,  inhibitTract, motorLock,  motorUnlock,  chargingOn, lamps
   { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::idle,       MOTOR_DS,   false,        false,      true,         false,      lamps::all          },  // st::powerOn
   { st::noChange, st::cpOrPp,   st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange,   0,          false,        false,      false,        false,      lamps::none         },  // st::idle
-  { st::noChange, st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange,   0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
+  { st::idle,     st::noChange, st::locking,  st::noChange, st::noChange,   st::noChange,   st::noChange,   0,          true,         false,      false,        false,      lamps::yellow       },  // st::cpOrPp
   { st::noChange, st::noChange, st::noChange, st::noChange, st::noChange,   st::noChange,   st::locked,     MOTOR_DS,   true,         true,       false,        false,      lamps::yellowFlash  },  // st::locking
   { st::noChange, st::noChange, st::noChange, st::charging, st::unlckerr,   st::unlocking,  st::noChange,   0,          true,         false,      false,        false,      lamps::yellowFlash  },  // st::locked
   { st::noPower,  st::noPower,  st::noChange, st::noChange, st::noChange,   st::unlocking,  st::noChange,   0,          true,         false,      false,        true,       lamps::green        },  // st::charging
