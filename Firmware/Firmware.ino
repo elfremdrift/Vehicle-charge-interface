@@ -39,14 +39,13 @@ void setup() {
   initState();
 
   writePGM(PSTR("done.\n"));
-  writePGM(PSTR("State     CP  PP  S1  SW  AMP Inh Lck Ulck Ind\n"));
+  dumpState();
 }
 
 
 void loop() {
   updateState();
   delay(100);
-
 /*
   char str[128];
   sprintf(str, "%u conversions: PWM high: %u, PWM low: %u, PP: %u, S1: %u, PWM%%: %u, switch: %d\n",

@@ -28,7 +28,7 @@ const char stNames[][static_cast<byte>(st::noChange)] PROGMEM = {
   , "charging  "
   , "noPower   "
   , "unlocking "
-  , "unlockwt "
+  , "unlockwt  "
   , "unlocked  "
   , "unlkerr   "
   , "unlkwterr "
@@ -129,6 +129,72 @@ void initState()
   addComplexTimer(TIMER_DS, flashTimer);
 }
 
+void dumpState()
+{
+  static byte cnt = 0;
+  static st lastST = static_cast<st>(255);
+  static CP lastCP = static_cast<CP>(255);
+  static PP lastPP = static_cast<PP>(255);
+  static S1 lastS1 = static_cast<S1>(255);
+  static SW lastSW = static_cast<SW>(255);
+  if (state == lastST && cpState.get() == lastCP && ppState.get() == lastPP && s1State.get() == lastS1 && swState.get() == lastSW) return;
+
+  if ((cnt++ & 0x0f) == 0) {
+      writePGM(PSTR("State     CP  PP  S1  SW R Y G\n"));
+  }
+
+  writePGM(getState());
+  writePGM(cpState.getValue());
+  writePGM(ppState.getValue());
+  writePGM(s1State.getValue());
+  writePGM(swState.getValue());
+
+  lastST = state;
+  lastCP = cpState.get();
+  lastPP = ppState.get();
+  lastS1 = s1State.get();
+  lastSW = swState.get();
+
+  const State& stateNow = states[static_cast<byte>(state)];
+  
+  switch (rdPgm(stateNow.lights)) {
+  case lamps::none:
+    writePGM(PSTR("- - - "));
+    break;
+  case lamps::red:
+    writePGM(PSTR("* - - "));
+    break;
+  case lamps::redFlash:
+    writePGM(PSTR("! - - "));
+    break;
+  case lamps::green:
+    writePGM(PSTR("- - * "));
+    break;
+  case lamps::greenFlash:
+    writePGM(PSTR("- - ! "));
+    break;
+  case lamps::yellow:
+    writePGM(PSTR("- * - "));
+    break;
+  case lamps::yellowFlash:
+    writePGM(PSTR("- ! - "));
+    break;
+  case lamps::all:
+    writePGM(PSTR("* * * "));
+    break;
+  case lamps::allFlash:
+    writePGM(PSTR("! ! ! "));
+    break;
+  }
+  
+  Serial.println();
+  //Serial.println(stateTimer);
+  //Serial.print("State -> "); Serial.print(static_cast<int>(state));
+  //Serial.print(" PP: "); Serial.print(adConversions[0]);
+  //Serial.print(" pp: "); Serial.println(adConversions[1]);
+  Serial.flush();
+}
+
 void updateState()
 {
   auto cpIn = cpState.get();
@@ -136,6 +202,8 @@ void updateState()
   bool hasPp = ppState.get() != PP::invalid;
   const State& stateNow = states[static_cast<byte>(state)];
   st nextSt;
+
+  dumpState();
 
   if ((nextSt=rdPgm(stateNow.unlockSwitch)) != st::noChange && swState.get() == SW::pressed)
     state = nextSt;
@@ -154,16 +222,7 @@ void updateState()
   else
     return;
 
-  writePGM(getState());
-  writePGM(cpState.getValue());
-  writePGM(ppState.getValue());
-  writePGM(s1State.getValue());
-  writePGM(swState.getValue());
-  //Serial.println(stateTimer);
-  //Serial.print("State -> "); Serial.print(static_cast<int>(state));
-  //Serial.print(" PP: "); Serial.print(adConversions[0]);
-  //Serial.print(" pp: "); Serial.println(adConversions[1]);
-  Serial.flush();
+  dumpState();
 
   // State was changed - update output variables:
   stateTimer = 0;

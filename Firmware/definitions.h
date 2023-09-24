@@ -8,6 +8,7 @@
 
 #ifndef MAIN
 #define EXTERN extern
+
 #else
 #define EXTERN
 #endif
@@ -116,8 +117,8 @@ enum class SW : byte {
 EXTERN const char swNames[][MAXINPUTSTR] PROGMEM
 #ifdef MAIN
 = {
-  "* ",
-  "- "
+  "*  ",
+  "-  "
 }
 #endif
 ;
@@ -202,6 +203,7 @@ void startAD(bool highCP);
 // state.cpp:
 void initState();
 void updateState();
+void dumpState();
 PGM_P getState();
 
 // timer.cpp:
@@ -248,4 +250,3 @@ constexpr uint16_t orBits(uint16_t n, T... rest)
 {
   return (1<<n) | orBits(rest...);
 }
-
