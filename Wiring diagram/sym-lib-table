@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "Controllino")(type "Legacy")(uri "${KIPRJMOD}/Controllino.lib")(options "")(descr ""))
+  (lib (name "Module")(type "KiCad")(uri "${KIPRJMOD}/Module.kicad_sym")(options "")(descr ""))
+)
